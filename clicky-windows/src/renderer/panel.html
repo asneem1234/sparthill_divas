@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self'"
+    />
+    <link rel="stylesheet" href="panel.css" />
+    <title>Clicky</title>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Clicky</h1>
+        <span id="state" class="state" role="status" aria-live="polite">idle</span>
+      </header>
+
+      <p id="hotkey-hint" class="hint"></p>
+
+      <section aria-labelledby="setup-heading">
+        <h2 id="setup-heading">Setup</h2>
+        <label for="worker-url">Worker URL</label>
+        <input id="worker-url" type="url" placeholder="https://your-worker.workers.dev" autocomplete="off" spellcheck="false" />
+
+        <label for="model">Model</label>
+        <select id="model">
+          <option value="claude-sonnet-4-6">Sonnet</option>
+          <option value="claude-opus-4-6">Opus</option>
+        </select>
+
+        <label class="check" for="show-cursor">
+          <input id="show-cursor" type="checkbox" />
+          Show the cursor buddy
+        </label>
+
+        <button id="save" type="button">Save</button>
+        <span id="saved" class="saved" role="status" aria-live="polite"></span>
+      </section>
+
+      <section aria-labelledby="ask-heading">
+        <h2 id="ask-heading">Ask by typing</h2>
+        <form id="ask-form">
+          <label for="ask-input" class="visually-hidden">Question</label>
+          <input id="ask-input" type="text" placeholder="Ask about what's on your screen" autocomplete="off" />
+          <button type="submit">Ask</button>
+        </form>
+      </section>
+
+      <section aria-labelledby="last-heading">
+        <h2 id="last-heading">Last exchange</h2>
+        <p id="transcript" class="transcript"></p>
+        <p id="response" class="response"></p>
+        <p id="error" class="error" role="alert"></p>
+      </section>
+
+      <footer>
+        <button id="quit" type="button" class="secondary">Quit Clicky</button>
+      </footer>
+    </main>
+    <script src="panel.js"></script>
+  </body>
+</html>
