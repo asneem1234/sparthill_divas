@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self'"
+    />
+    <link rel="stylesheet" href="overlay.css" />
+    <title>Clicky overlay</title>
+  </head>
+  <body>
+    <!-- Decorative, click-through cursor buddy. Not interactive. -->
+    <div id="buddy" aria-hidden="true">
+      <svg id="triangle" width="28" height="28" viewBox="-14 -14 28 28">
+        <polygon points="0,-11 10,9 0,5 -10,9" />
+      </svg>
+      <div id="spinner"></div>
+      <div id="wave">
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+      <div id="label"></div>
+    </div>
+    <script src="overlay.js"></script>
+  </body>
+</html>
