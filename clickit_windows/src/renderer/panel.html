@@ -1,0 +1,133 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:"
+    />
+    <title>Click It</title>
+    <link rel="stylesheet" href="panel.css" />
+  </head>
+  <body>
+    <div id="panel">
+      <div class="header">
+        <div class="header-title">
+          <span id="status-dot"></span>
+          <span class="app-name">Click It</span>
+        </div>
+        <div class="header-right">
+          <span id="status-text"></span>
+          <button id="close-button" class="icon-button" aria-label="Close panel">
+            <svg viewBox="0 0 10 10" width="10" height="10"><path d="M1.5 1.5l7 7M8.5 1.5l-7 7" /></svg>
+          </button>
+        </div>
+      </div>
+      <div class="divider inset"></div>
+
+      <!-- Copy that explains the current setup state -->
+      <section id="permissions-copy" class="section top-gap">
+        <div id="copy-ready" class="copy-block hidden">
+          <p class="copy-primary" id="push-to-talk-instruction"></p>
+        </div>
+        <div id="copy-all-set" class="copy-block hidden">
+          <p class="copy-primary">You're all set. Hit Start to meet Click It.</p>
+        </div>
+        <div id="copy-revoked" class="copy-block hidden">
+          <p class="copy-title">Permissions needed</p>
+          <p class="copy-secondary">Some permissions were revoked. Grant the permission below to keep using Click It.</p>
+        </div>
+        <div id="copy-intro" class="copy-block hidden">
+          <p class="copy-title">Hi, I'm Click It. An AI living in your cursor.</p>
+          <p class="copy-secondary">A small pink cursor buddy that helps you learn stuff as you use your computer.</p>
+          <p class="copy-warning">
+            Nothing runs in the background. Click It only takes a screenshot when you use the hotkey, so you can give
+            that permission in peace.
+          </p>
+        </div>
+      </section>
+
+      <section id="model-section" class="section gap-12 hidden">
+        <div class="row">
+          <span class="row-label">Model</span>
+          <div id="model-picker" class="segmented-control"></div>
+        </div>
+      </section>
+
+      <section id="permissions-section" class="section gap-16 hidden">
+        <div class="section-heading">PERMISSIONS</div>
+        <div class="row permission-row">
+          <div class="row-left">
+            <svg id="microphone-icon" class="row-icon" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+            <span class="row-label">Microphone</span>
+          </div>
+          <span id="microphone-granted" class="granted-badge hidden"><span class="granted-dot"></span>Granted</span>
+          <button id="grant-microphone-button" class="pill-button accent">Grant</button>
+        </div>
+      </section>
+
+      <section id="start-section" class="section gap-16 hidden">
+        <button id="start-button" class="primary-button">Start</button>
+      </section>
+
+      <section class="section gap-12">
+        <div class="row">
+          <span class="row-label">Worker</span>
+          <input id="worker-url-input" class="text-input" type="text" spellcheck="false" aria-label="Worker URL" />
+        </div>
+      </section>
+
+      <section id="error-section" class="section gap-12 hidden">
+        <p id="error-text" class="copy-error"></p>
+      </section>
+
+      <section class="section gap-12">
+        <button id="open-click-it-button" class="card-button" title="Open the Click It gemstone menu">
+          <svg class="row-icon" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"/></svg>
+          <span class="card-text">
+            <span class="card-title">Open Click It</span>
+            <span class="card-subtitle" id="click-it-instruction"></span>
+          </span>
+        </button>
+      </section>
+
+      <section id="voice-chat-section" class="section gap-12 hidden">
+        <button id="voice-chat-button" class="card-button" title="Talk with Click It, hands-free">
+          <svg class="row-icon" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+          <span class="card-text">
+            <span class="card-title">Voice chat</span>
+            <span class="card-subtitle">Talk hands-free, voice to voice</span>
+          </span>
+        </button>
+      </section>
+
+      <section id="cursor-toggle-section" class="section gap-16 hidden">
+        <div class="row">
+          <div class="row-left">
+            <svg class="row-icon" viewBox="0 0 24 24"><path d="M5 3l14 8-6 1.5L10.5 19z"/></svg>
+            <span class="row-label">Show Click It</span>
+          </div>
+          <label class="switch" aria-label="Show Click It cursor">
+            <input id="cursor-toggle" type="checkbox" />
+            <span class="switch-track"></span>
+          </label>
+        </div>
+      </section>
+
+      <div class="spacer-12"></div>
+      <div class="divider inset"></div>
+
+      <footer class="footer">
+        <button id="quit-button" class="footer-button">
+          <svg class="row-icon small" viewBox="0 0 24 24"><path d="M12 3v9M6.3 6.3a8 8 0 1 0 11.4 0"/></svg>
+          Quit Click It
+        </button>
+        <button id="replay-onboarding-button" class="footer-button hidden">
+          <svg class="row-icon small" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 8.5l5 3.5-5 3.5z"/></svg>
+          Watch Onboarding Again
+        </button>
+      </footer>
+    </div>
+    <script src="panel.js"></script>
+  </body>
+</html>

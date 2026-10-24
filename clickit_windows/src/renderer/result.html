@@ -1,0 +1,71 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:"
+    />
+    <title>Click It</title>
+    <link rel="stylesheet" href="result.css" />
+  </head>
+  <body>
+    <div id="window">
+      <header class="header">
+        <div class="header-title">
+          <span id="status-dot" class="status-dot"></span>
+          <span id="title" class="title">Click It</span>
+        </div>
+        <button id="close-button" class="icon-button" aria-label="Close">
+          <svg viewBox="0 0 10 10" width="10" height="10"><path d="M1.5 1.5l7 7M8.5 1.5l-7 7" /></svg>
+        </button>
+      </header>
+      <div class="divider"></div>
+
+      <div id="content" class="content">
+        <!-- Shown while the window is checked on this PC, and when something is found. -->
+        <div id="gate-card" class="gate-card hidden">
+          <div id="gate-title" class="gate-title"></div>
+          <div id="gate-risk" class="risk-badge hidden"></div>
+          <p id="gate-message" class="gate-message"></p>
+          <ul id="gate-findings" class="gate-findings"></ul>
+          <div id="gate-actions" class="gate-actions"></div>
+        </div>
+
+        <img id="thumbnail" class="thumbnail hidden" alt="The window Click It is looking at" />
+
+        <div id="copied-text-chip" class="chip hidden">
+          <span id="copied-text-label" class="chip-label"></span>
+          <button id="copied-text-remove" class="chip-remove" aria-label="Don't use the copied text" title="Don't use the copied text">
+            <svg viewBox="0 0 10 10" width="8" height="8"><path d="M1.5 1.5l7 7M8.5 1.5l-7 7" /></svg>
+          </button>
+        </div>
+
+        <div id="language-row" class="language-row hidden">
+          <label class="language-label" for="language-input">Translate to</label>
+          <input id="language-input" class="text-input" list="language-suggestions" spellcheck="false" autocomplete="off" />
+          <datalist id="language-suggestions"></datalist>
+          <button id="translate-button" class="primary-button small">Translate</button>
+        </div>
+
+        <div id="risk-badge" class="risk-badge hidden"></div>
+        <div id="response" class="response" role="log" aria-live="polite"></div>
+      </div>
+
+      <footer id="footer" class="footer hidden">
+        <div class="footer-row">
+          <textarea id="question-input" class="question-input" rows="1" spellcheck="true"></textarea>
+          <button id="send-button" class="primary-button small">Send</button>
+        </div>
+        <div class="footer-actions">
+          <button id="copy-button" class="link-button" disabled>Copy answer</button>
+          <span class="footer-hint">Enter to send</span>
+        </div>
+      </footer>
+      <div id="copy-only-bar" class="footer copy-only hidden">
+        <button id="copy-button-secondary" class="link-button" disabled>Copy result</button>
+      </div>
+    </div>
+    <script src="result.js"></script>
+  </body>
+</html>

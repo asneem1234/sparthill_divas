@@ -1,0 +1,172 @@
+:root {
+  --accent: #db2777;
+  --pink-400: #f472b6;
+  --pink-glow: 255, 79, 163;
+  --level: 0; /* 0..1, set from script: how loud whoever is talking is */
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  overflow: hidden;
+  user-select: none;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.orb {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  cursor: pointer;
+  transition: transform 140ms ease;
+}
+.orb:hover {
+  transform: scale(1.08);
+}
+
+.orb-core {
+  position: absolute;
+  inset: 6px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffd0e6, var(--pink-400) 45%, var(--accent) 100%);
+  box-shadow: 0 0 calc(8px + var(--level) * 18px) rgba(var(--pink-glow), calc(0.45 + var(--level) * 0.45)), 0 2px 6px rgba(0, 0, 0, 0.45);
+  transform: scale(calc(1 + var(--level) * 0.24));
+  transition: transform 70ms linear, box-shadow 70ms linear, filter 200ms ease;
+}
+
+.orb-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1.5px solid rgba(var(--pink-glow), 0.45);
+  opacity: 0;
+}
+
+/* A soft light that sweeps over the orb while it looks at the screen. */
+.orb-scan {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.75) 50%, transparent 100%);
+  transform: translateY(-100%);
+}
+
+.orb-slash {
+  position: absolute;
+  inset: 14px;
+  width: 36px;
+  height: 36px;
+  opacity: 0;
+  stroke: #fff;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  fill: none;
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.7));
+}
+
+.orb-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #f87171;
+  color: #fff;
+  font: 700 12px/18px 'Segoe UI', sans-serif;
+  text-align: center;
+  opacity: 0;
+}
+
+/* ---- States ---- */
+
+.orb[data-state='connecting'] .orb-core,
+.orb[data-state='thinking'] .orb-core {
+  animation: breathe 1.4s ease-in-out infinite;
+}
+.orb[data-state='connecting'] .orb-ring,
+.orb[data-state='thinking'] .orb-ring {
+  opacity: 1;
+  border-style: dashed;
+  animation: spin 3s linear infinite;
+}
+.orb[data-state='listening'] .orb-ring {
+  opacity: 1;
+  animation: ripple 2.2s ease-out infinite;
+}
+.orb[data-state='speaking'] .orb-ring {
+  opacity: 1;
+  border-color: rgba(var(--pink-glow), 0.7);
+}
+.orb[data-state='looking'] .orb-ring {
+  opacity: 1;
+  border-color: rgba(255, 255, 255, 0.75);
+  animation: ripple 0.9s ease-out infinite;
+}
+.orb[data-state='looking'] .orb-scan {
+  opacity: 1;
+  animation: scan 0.9s ease-in-out infinite;
+}
+.orb[data-state='muted'] .orb-core,
+.orb[data-state='error'] .orb-core {
+  filter: grayscale(1) brightness(0.6);
+}
+.orb[data-state='muted'] .orb-slash {
+  opacity: 1;
+}
+.orb[data-state='error'] .orb-badge {
+  opacity: 1;
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(0.92);
+  }
+  50% {
+    transform: scale(1.04);
+  }
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes ripple {
+  0% {
+    transform: scale(0.86);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.12);
+    opacity: 0;
+  }
+}
+@keyframes scan {
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orb-core,
+  .orb-ring,
+  .orb-scan {
+    animation: none !important;
+  }
+}

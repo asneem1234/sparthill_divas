@@ -1,0 +1,210 @@
+html,
+body {
+  margin: 0;
+  width: 280px;
+  height: 264px;
+  overflow: hidden;
+  background: transparent;
+  font-family: 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
+  user-select: none;
+}
+
+#orb-menu {
+  position: relative;
+  width: 280px;
+  height: 264px;
+  transform-origin: 140px 152px; /* grow from the middle of the gems, not the greeting */
+  transform: scale(0.6);
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  outline: none;
+}
+
+#orb-menu.is-open {
+  transform: scale(1);
+}
+
+/* The typed greeting above the gems. */
+#intro-bubble {
+  position: absolute;
+  left: 50%;
+  top: 8px;
+  transform: translateX(-50%);
+  padding: 5px 11px;
+  border-radius: 8px;
+  background: #ff4fa3;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: 0 0 8px rgba(255, 79, 163, 0.5);
+  min-height: 16px;
+  min-width: 18px;
+}
+
+#intro-bubble.is-typing::after {
+  content: '';
+  display: inline-block;
+  width: 1px;
+  height: 11px;
+  margin-left: 1px;
+  background: #fff;
+  vertical-align: -1px;
+  animation: caret-blink 0.6s steps(1) infinite;
+}
+
+@keyframes caret-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* ---- Center close orb ---- */
+
+#center-orb {
+  position: absolute;
+  left: 124px; /* gem center x (140) minus half the orb */
+  top: 136px; /* gem center y (152) minus half the orb */
+  width: 32px;
+  height: 32px;
+  border: none;
+  padding: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.95) 2px, #ff4fa3 26px);
+  box-shadow: 0 0 9px rgba(255, 79, 163, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: float-down-first 1.6s ease-in-out infinite alternate;
+}
+
+#center-orb svg {
+  width: 11px;
+  height: 11px;
+  stroke: #ff4fa3;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+#center-orb:focus-visible {
+  outline: 2px solid #fff;
+}
+
+/* ---- Gemstones ---- */
+
+.gem-slot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+
+.gem-float {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.gem-float.float-even {
+  animation: float-even 1.6s ease-in-out infinite alternate;
+}
+
+.gem-float.float-odd {
+  animation: float-odd 1.6s ease-in-out infinite alternate;
+}
+
+.gem-float.is-unavailable {
+  opacity: 0.45;
+}
+
+.gem-button {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: radial-gradient(
+    circle at 30% 25%,
+    rgba(255, 255, 255, 0.6) 1px,
+    var(--gem-color) 16px,
+    var(--gem-color-dim) 40px
+  );
+  box-shadow: 0 0 5px var(--gem-glow-low);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.gem-button svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.gem-button:disabled {
+  cursor: default;
+}
+
+.gem-button.is-hovered {
+  border-color: rgba(255, 255, 255, 0.75);
+  border-width: 2px;
+}
+
+.gem-button.is-keyboard-selected {
+  border-color: rgba(255, 255, 255, 0.95);
+  border-width: 3px;
+}
+
+.gem-button.is-highlighted {
+  transform: scale(1.16);
+  box-shadow: 0 0 13px var(--gem-glow-high);
+}
+
+.gem-label {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background 0.2s ease;
+}
+
+.gem-label.is-highlighted {
+  background: rgba(0, 0, 0, 0.85);
+}
+
+/* Neighboring gemstones float in opposite directions. */
+@keyframes float-even {
+  from {
+    transform: translateY(3px);
+  }
+  to {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes float-odd {
+  from {
+    transform: translateY(-3px);
+  }
+  to {
+    transform: translateY(3px);
+  }
+}
+
+@keyframes float-down-first {
+  from {
+    transform: translateY(2px);
+  }
+  to {
+    transform: translateY(-2px);
+  }
+}

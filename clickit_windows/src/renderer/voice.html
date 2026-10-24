@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' blob:; style-src 'self' 'unsafe-inline'; connect-src ws: wss:; media-src 'self' blob:"
+    />
+    <title>Click It voice chat</title>
+    <link rel="stylesheet" href="voice.css" />
+  </head>
+  <body>
+    <!-- Just an icon. Click: mute / unmute. Right-click: menu. Drag: move it. -->
+    <div id="orb" class="orb" data-state="connecting" role="button" tabindex="-1" aria-label="Click It voice chat" title="Click It is connecting...">
+      <div class="orb-ring"></div>
+      <div class="orb-core"><div class="orb-scan"></div></div>
+      <svg class="orb-slash" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14" /></svg>
+      <span class="orb-badge" aria-hidden="true">!</span>
+    </div>
+    <script src="voice.js"></script>
+  </body>
+</html>
