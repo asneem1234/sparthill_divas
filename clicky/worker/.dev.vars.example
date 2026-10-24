@@ -1,0 +1,12 @@
+# Clicky Worker - local development environment variables (EXAMPLE)
+#
+# Copy this file to `.dev.vars` in the same `worker/` folder and replace
+# the placeholders with your real keys. `.dev.vars` is git-ignored so your
+# real keys are never committed.
+#
+# Do NOT put real keys in this example file.
+
+ANTHROPIC_API_KEY=sk_ant_your_anthropic_key_here
+ASSEMBLYAI_API_KEY=your_assemblyai_key_here
+ELEVENLABS_API_KEY=your_elevenlabs_key_here
+ELEVENLABS_VOICE_ID=your_elevenlabs_voice_id_here
