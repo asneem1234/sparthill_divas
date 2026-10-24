@@ -64,6 +64,63 @@ async function captureAllScreens() {
 }
 
 /**
+ * Captures one rectangle of a display. `rect` is in DIPs relative to the
+ * display's top-left corner (what the selector window reports).
+ * Returns a single capture shaped like captureAllScreens() results, with
+ * displayBounds set to the region so pointing coordinates map correctly.
+ */
+async function captureRegion(display, rect) {
+  const scale = display.scaleFactor || 1;
+  const sources = await desktopCapturer.getSources({
+    types: ['screen'],
+    thumbnailSize: {
+      width: Math.round(display.bounds.width * scale),
+      height: Math.round(display.bounds.height * scale),
+    },
+  });
+  const displays = screen.getAllDisplays();
+  const source =
+    sources.find((candidate) => candidate.display_id === String(display.id)) ||
+    sources[displays.findIndex((candidate) => candidate.id === display.id)];
+  if (!source || source.thumbnail.isEmpty()) throw new Error('Failed to capture the selected area.');
+
+  const full = source.thumbnail.getSize();
+  const sx = full.width / display.bounds.width;
+  const sy = full.height / display.bounds.height;
+  let image = source.thumbnail.crop({
+    x: Math.max(0, Math.round(rect.x * sx)),
+    y: Math.max(0, Math.round(rect.y * sy)),
+    width: Math.max(1, Math.round(rect.width * sx)),
+    height: Math.max(1, Math.round(rect.height * sy)),
+  });
+
+  const size = image.getSize();
+  const longest = Math.max(size.width, size.height);
+  if (longest > MAX_DIMENSION) {
+    const ratio = MAX_DIMENSION / longest;
+    image = image.resize({
+      width: Math.round(size.width * ratio),
+      height: Math.round(size.height * ratio),
+    });
+  }
+  const finalSize = image.getSize();
+
+  return {
+    jpeg: image.toJPEG(85),
+    isCursorScreen: true,
+    displayBounds: {
+      x: display.bounds.x + rect.x,
+      y: display.bounds.y + rect.y,
+      width: rect.width,
+      height: rect.height,
+    },
+    screenshotWidth: finalSize.width,
+    screenshotHeight: finalSize.height,
+    label: `a region the user selected on their screen (image dimensions: ${finalSize.width}x${finalSize.height} pixels)`,
+  };
+}
+
+/**
  * Maps a point in screenshot pixels to global screen coordinates (DIPs).
  */
 function screenshotPointToGlobal(capture, point) {
@@ -75,4 +132,4 @@ function screenshotPointToGlobal(capture, point) {
   };
 }
 
-module.exports = { captureAllScreens, screenshotPointToGlobal };
+module.exports = { captureAllScreens, captureRegion, screenshotPointToGlobal };

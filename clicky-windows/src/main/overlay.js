@@ -27,6 +27,7 @@ class Overlay {
     this.flight = null;
     this.timer = null;
     this.hasPosition = false;
+    this.cursorSettings = null;
   }
 
   start() {
@@ -53,6 +54,17 @@ class Overlay {
 
   setEnabled(enabled) {
     this.enabled = enabled;
+  }
+
+  /** Stores cursor appearance ({color, size, glow}) and pushes it to every overlay window. */
+  setCursorSettings(cursorSettings) {
+    this.cursorSettings = cursorSettings;
+    for (const window of this.windows.values()) this.sendCursorSettings(window);
+  }
+
+  sendCursorSettings(window) {
+    if (!this.cursorSettings || window.isDestroyed() || window.webContents.isLoading()) return;
+    window.webContents.send('overlay:cursor-settings', this.cursorSettings);
   }
 
   /** Whether a pointing flight (fly, hold, or return) is in progress. */
@@ -128,6 +140,7 @@ class Overlay {
     window.setContentProtection(true);
     window.setVisibleOnAllWorkspaces(true);
     window.loadFile(path.join(__dirname, '..', 'renderer', 'overlay.html'));
+    window.webContents.on('did-finish-load', () => this.sendCursorSettings(window));
     window.once('ready-to-show', () => {
       window.showInactive();
       // Re-apply bounds after show: mixed-DPI setups can offset the first placement.

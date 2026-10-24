@@ -1,11 +1,24 @@
 'use strict';
 
 const settings = require('./settings');
+const gemini = require('./gemini');
+
+/**
+ * Two modes:
+ *  - Worker URL set in the panel: requests go through the Cloudflare Worker.
+ *  - Otherwise, if GEMINI_API_KEY is available (env or clicky-windows/.env),
+ *    the app calls Gemini directly. No deployment needed.
+ */
+function useDirect() {
+  return !settings.load().workerUrl && gemini.hasApiKey();
+}
 
 function baseUrl() {
   const url = settings.load().workerUrl;
   if (!url) {
-    throw new Error('No Worker URL set. Open the Clicky panel from the system tray and paste your Cloudflare Worker URL.');
+    throw new Error(
+      'No Gemini access configured. Put GEMINI_API_KEY in clicky-windows/.env, or paste a Worker URL in the ClickIt panel.'
+    );
   }
   return url;
 }
@@ -16,36 +29,56 @@ async function readError(response) {
 }
 
 /**
- * Streams a Claude response through the Worker's /chat route.
+ * Streams a Gemini response through the Worker's /chat route.
  * Calls onText with the accumulated text after every chunk.
  */
-async function streamChat({ model, systemPrompt, history, images, userPrompt, signal, onText }) {
+async function streamChat(args) {
+  if (useDirect()) return gemini.streamChat(args);
+  return streamChatViaWorker(args);
+}
+
+async function streamChatViaWorker({ model, systemPrompt, history, images, userPrompt, signal, onText }) {
   const messages = [];
+  
+  // Add conversation history
   for (const entry of history) {
     messages.push({ role: 'user', content: entry.userTranscript });
     messages.push({ role: 'assistant', content: entry.assistantResponse });
   }
 
+  // Build current message with images and text
   const content = [];
+  
   for (const image of images) {
     content.push({
       type: 'image',
-      source: { type: 'base64', media_type: 'image/jpeg', data: image.data.toString('base64') },
+      source: { 
+        type: 'base64', 
+        media_type: 'image/jpeg', 
+        data: image.data.toString('base64') 
+      },
     });
     content.push({ type: 'text', text: image.label });
   }
+  
   content.push({ type: 'text', text: userPrompt });
   messages.push({ role: 'user', content });
 
   const response = await fetch(`${baseUrl()}/chat`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ model, max_tokens: 1024, stream: true, system: systemPrompt, messages }),
+    body: JSON.stringify({ 
+      model, 
+      max_tokens: 1024, 
+      stream: true, 
+      system: systemPrompt, 
+      messages 
+    }),
     signal,
   });
 
   if (!response.ok) {
-    throw new Error(`Claude request failed (${await readError(response)})`);
+    throw new Error(`Gemini request failed (${await readError(response)})`);
   }
 
   // Server-sent events: each event is "data: {json}" on its own line.
@@ -75,7 +108,7 @@ async function streamChat({ model, systemPrompt, history, images, userPrompt, si
         accumulated += event.delta.text;
         onText?.(accumulated);
       } else if (event.type === 'error') {
-        throw new Error(`Claude stream error: ${event.error?.message ?? 'unknown'}`);
+        throw new Error(`Gemini stream error: ${event.error?.message ?? 'unknown'}`);
       }
     }
   }
@@ -83,34 +116,20 @@ async function streamChat({ model, systemPrompt, history, images, userPrompt, si
   return accumulated;
 }
 
-/** Returns mp3 bytes for the given text via the Worker's /tts route. */
-async function synthesizeSpeech(text, signal) {
-  const response = await fetch(`${baseUrl()}/tts`, {
+/** Transcribes a recorded clip (base64) via the Worker's /transcribe route. */
+async function transcribe({ data, mime, signal }) {
+  if (useDirect()) return gemini.transcribe({ data, mime, signal });
+  const response = await fetch(`${baseUrl()}/transcribe`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json', accept: 'audio/mpeg' },
-    body: JSON.stringify({
-      text,
-      model_id: 'eleven_flash_v2_5',
-      voice_settings: { stability: 0.5, similarity_boost: 0.75 },
-    }),
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ data, mime }),
     signal,
   });
-
   if (!response.ok) {
-    throw new Error(`Text-to-speech failed (${await readError(response)})`);
-  }
-  return Buffer.from(await response.arrayBuffer());
-}
-
-/** Fetches a short-lived AssemblyAI streaming token via the Worker. */
-async function fetchTranscriptionToken() {
-  const response = await fetch(`${baseUrl()}/transcribe-token`, { method: 'POST' });
-  if (!response.ok) {
-    throw new Error(`Could not get transcription token (${await readError(response)})`);
+    throw new Error(`Transcription failed (${await readError(response)})`);
   }
   const json = await response.json();
-  if (!json.token) throw new Error('Transcription token response was missing a token.');
-  return json.token;
+  return typeof json.text === 'string' ? json.text : '';
 }
 
-module.exports = { streamChat, synthesizeSpeech, fetchTranscriptionToken };
+module.exports = { streamChat, transcribe };

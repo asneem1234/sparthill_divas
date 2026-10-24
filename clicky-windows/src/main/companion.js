@@ -11,7 +11,8 @@ const MAX_HISTORY_EXCHANGES = 10;
 
 /**
  * Central state machine: idle -> listening -> processing -> responding -> idle.
- * Mirrors CompanionManager in the macOS app.
+ * Voice: the audio window records a clip, the Worker transcribes it with
+ * Gemini, and the reply is spoken with the Windows system voice.
  */
 class Companion extends EventEmitter {
   /**
@@ -54,25 +55,14 @@ class Companion extends EventEmitter {
     this.sendToAudio('audio:stop-playback');
   }
 
-  // --- Push to talk -------------------------------------------------------
+  // --- Voice ----------------------------------------------------------------
 
-  async startListening() {
+  startListening() {
     if (this.state === 'listening') return;
     this.interrupt();
-    const session = this.sessionId;
     this.lastError = '';
     this.setState('listening');
-
-    // Start the mic right away; the websocket connects once the token arrives.
-    this.sendToAudio('audio:start', { session });
-    try {
-      const token = await worker.fetchTranscriptionToken();
-      if (session !== this.sessionId) return;
-      this.sendToAudio('audio:connect', { session, token });
-    } catch (error) {
-      if (session !== this.sessionId) return;
-      this.fail(error);
-    }
+    this.sendToAudio('audio:start', { session: this.sessionId });
   }
 
   stopListening() {
@@ -81,15 +71,39 @@ class Companion extends EventEmitter {
     this.sendToAudio('audio:stop', { session: this.sessionId });
   }
 
-  /** Called when the audio window reports a final transcript. */
-  handleTranscript({ session, text }) {
-    if (session !== this.sessionId || this.state !== 'processing') return;
-    const transcript = (text || '').trim();
-    if (!transcript) {
+  toggleListening() {
+    console.log(`[companion] toggle voice (state=${this.state})`);
+    if (this.state === 'listening') this.stopListening();
+    else this.startListening();
+  }
+
+  /** Called when the audio window delivers a recorded clip. */
+  async handleRecording({ session, data, mime }) {
+    if (session !== this.sessionId) return;
+    if (this.state === 'listening') this.setState('processing'); // auto-stopped by the recorder
+    if (this.state !== 'processing') return;
+
+    if (!data) {
       this.setState('idle');
       return;
     }
-    this.respondTo(transcript);
+
+    const abortController = new AbortController();
+    this.abortController = abortController;
+    try {
+      console.log(`[companion] transcribing ${mime} clip (${Math.round(data.length * 0.75 / 1024)} KB)`);
+      const text = (await worker.transcribe({ data, mime, signal: abortController.signal })).trim();
+      console.log(`[companion] transcript: "${text}"`);
+      if (session !== this.sessionId || abortController.signal.aborted) return;
+      if (!text) {
+        this.setState('idle');
+        return;
+      }
+      await this.respondTo(text);
+    } catch (error) {
+      if (session !== this.sessionId || error.name === 'AbortError') return;
+      this.fail(error);
+    }
   }
 
   handleAudioError({ session, message }) {
@@ -105,19 +119,24 @@ class Companion extends EventEmitter {
     if (this.state === 'responding') this.setState('idle');
   }
 
-  /** Typed question from the panel (no mic involved). */
-  ask(text) {
+  // --- Typed / menu questions -------------------------------------------------
+
+  /**
+   * Ask a question. Pass `captures` to answer about specific images
+   * (for example a selected region) instead of capturing every screen.
+   */
+  ask(text, captures) {
     const transcript = (text || '').trim();
     if (!transcript || this.state === 'listening') return;
     this.interrupt();
     this.lastError = '';
     this.setState('processing');
-    this.respondTo(transcript);
+    this.respondTo(transcript, captures);
   }
 
   // --- Response pipeline --------------------------------------------------
 
-  async respondTo(transcript) {
+  async respondTo(transcript, providedCaptures) {
     const session = this.sessionId;
     const abortController = new AbortController();
     this.abortController = abortController;
@@ -128,7 +147,7 @@ class Companion extends EventEmitter {
     this.emit('status', this.getStatus());
 
     try {
-      const captures = await captureAllScreens();
+      const captures = providedCaptures || (await captureAllScreens());
       if (isStale()) return;
 
       const fullResponse = await worker.streamChat({
@@ -143,6 +162,7 @@ class Companion extends EventEmitter {
 
       const parsed = parsePointingCoordinates(fullResponse);
       this.lastResponse = parsed.spokenText;
+      console.log(`[companion] reply (${captures.length} image(s)): ${parsed.spokenText.slice(0, 200)}`);
 
       if (parsed.coordinate) {
         const target =
@@ -163,10 +183,8 @@ class Companion extends EventEmitter {
         return;
       }
 
-      const mp3 = await worker.synthesizeSpeech(parsed.spokenText, abortController.signal);
-      if (isStale()) return;
-      this.sendToAudio('audio:play', { session, mp3 });
-      // State flips to "responding" when the audio window reports playback started.
+      this.setState('responding');
+      this.sendToAudio('audio:speak', { session, text: parsed.spokenText });
     } catch (error) {
       if (isStale() || error.name === 'AbortError') return;
       this.fail(error);
@@ -177,8 +195,8 @@ class Companion extends EventEmitter {
     console.error('[companion]', error);
     this.lastError = error.message || String(error);
     this.sendToAudio('audio:cancel');
-    this.sendToAudio('audio:speak-fallback', {
-      text: 'sorry, something went wrong. check the clicky panel for details.',
+    this.sendToAudio('audio:speak', {
+      text: 'sorry, something went wrong. check the ClickIt panel for details.',
     });
     this.setState('idle');
   }
