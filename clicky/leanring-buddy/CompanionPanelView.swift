@@ -49,6 +49,12 @@ struct CompanionPanelView: View {
                     .padding(.horizontal, 16)
             }
 
+            Spacer()
+                .frame(height: 12)
+
+            openClickItMenuButton
+                .padding(.horizontal, 16)
+
             // Show Clicky toggle — hidden for now
             // if companionManager.hasCompletedOnboarding && companionManager.allPermissionsGranted {
             //     Spacer()
@@ -641,6 +647,45 @@ struct CompanionPanelView: View {
         .pointerCursor()
     }
 
+    // MARK: - Click It Button
+
+    /// Opens the Click It gemstone menu. Same as tapping Control+Shift.
+    private var openClickItMenuButton: some View {
+        Button(action: {
+            NotificationCenter.default.post(name: .clickyDismissPanel, object: nil)
+            // Give the menu bar panel a moment to close so it does not cover the gemstones.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                companionManager.toggleClickItOrbMenu()
+            }
+        }) {
+            HStack(spacing: 8) {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 12, weight: .medium))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Open Click It")
+                        .font(.system(size: 12, weight: .semibold))
+                    Text("Or tap Control+Shift anywhere")
+                        .font(.system(size: 10))
+                        .foregroundColor(DS.Colors.textTertiary)
+                }
+            }
+            .foregroundColor(DS.Colors.textSecondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(
+                RoundedRectangle(cornerRadius: DS.CornerRadius.medium, style: .continuous)
+                    .fill(Color.white.opacity(0.06))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: DS.CornerRadius.medium, style: .continuous)
+                    .stroke(DS.Colors.borderSubtle, lineWidth: 0.5)
+            )
+        }
+        .buttonStyle(.plain)
+        .pointerCursor()
+        .help("Open the Click It gemstone menu")
+    }
     // MARK: - DM Farza Button
 
     private var dmFarzaButton: some View {

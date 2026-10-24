@@ -65,12 +65,16 @@ final class CompanionManager: ObservableObject {
     let buddyDictationManager = BuddyDictationManager()
     let globalPushToTalkShortcutMonitor = GlobalPushToTalkShortcutMonitor()
     let overlayWindowManager = OverlayWindowManager()
+    /// Click It gemstone menu. Lives in its own interactive panel, separate
+    /// from the click-through push-to-talk cursor overlay.
+    let clickItOrbMenuPanelManager = ClickItOrbMenuPanelManager()
+    private var clickItMenuShortcutCancellable: AnyCancellable?
     // Response text is now displayed inline on the cursor overlay via
     // streamingResponseText, so no separate response overlay manager is needed.
 
     /// Base URL for the Cloudflare Worker proxy. All API requests route
     /// through this so keys never ship in the app binary.
-    private static let workerBaseURL = "https://your-worker-name.your-subdomain.workers.dev"
+    private static let workerBaseURL = "http://localhost:8787"
 
     private lazy var claudeAPI: ClaudeAPI = {
         return ClaudeAPI(proxyURL: "\(Self.workerBaseURL)/chat", model: selectedModel)
@@ -179,6 +183,7 @@ final class CompanionManager: ObservableObject {
         bindVoiceStateObservation()
         bindAudioPowerLevel()
         bindShortcutTransitions()
+        bindClickItMenuShortcut()
         // Eagerly touch the Claude API so its TLS warmup handshake completes
         // well before the onboarding demo fires at ~40s into the video.
         _ = claudeAPI
@@ -290,6 +295,8 @@ final class CompanionManager: ObservableObject {
     func stop() {
         globalPushToTalkShortcutMonitor.stop()
         buddyDictationManager.cancelCurrentDictation()
+        clickItOrbMenuPanelManager.hideOrbMenu()
+        clickItMenuShortcutCancellable?.cancel()
         overlayWindowManager.hideOverlay()
         transientHideTask?.cancel()
 
@@ -395,6 +402,48 @@ final class CompanionManager: ObservableObject {
         }
     }
 
+    // MARK: - Click It
+
+    /// Opens the gemstone menu at the cursor, or closes it if already open.
+    /// Triggered by the Control+Shift tap or the menu bar panel button.
+    func toggleClickItOrbMenu() {
+        if clickItOrbMenuPanelManager.isShowingOrbMenu {
+            clickItOrbMenuPanelManager.hideOrbMenu()
+            return
+        }
+        clickItOrbMenuPanelManager.showOrbMenu(
+            onSelectAction: { [weak self] selectedAction in
+                self?.handleClickItActionSelected(selectedAction)
+            },
+            onDismiss: { [weak self] in
+                self?.clickItOrbMenuPanelManager.hideOrbMenu()
+            }
+        )
+    }
+
+    private func bindClickItMenuShortcut() {
+        clickItMenuShortcutCancellable = globalPushToTalkShortcutMonitor
+            .clickItMenuShortcutPublisher
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.toggleClickItOrbMenu()
+            }
+    }
+
+    /// Step 1 only verifies the menu itself. Each action is connected in a
+    /// later step, so for now selecting one just confirms the click landed.
+    /// Nothing is captured or sent to the AI here.
+    private func handleClickItActionSelected(_ selectedAction: ClickItAction) {
+        clickItOrbMenuPanelManager.hideOrbMenu()
+        guard selectedAction.isAvailable else { return }
+
+        let placeholderAlert = NSAlert()
+        placeholderAlert.messageText = "\(selectedAction.label) selected"
+        placeholderAlert.informativeText = "The Click It menu is working. This action gets connected in the next step. Nothing was captured or sent."
+        placeholderAlert.addButton(withTitle: "OK")
+        NSApp.activate(ignoringOtherApps: true)
+        placeholderAlert.runModal()
+    }
     // MARK: - Private
 
     /// Triggers the system microphone prompt if the user has never been asked.

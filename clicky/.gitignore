@@ -6,3 +6,8 @@ build/
 releases/
 .claude/
 coding-plans/
+# Per-user Xcode state (schemes, UI state). Each developer keeps their own.
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+# Wrangler local dev build output.
+worker/.wrangler/

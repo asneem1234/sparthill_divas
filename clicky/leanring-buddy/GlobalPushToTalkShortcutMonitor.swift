@@ -14,6 +14,12 @@ import Foundation
 
 final class GlobalPushToTalkShortcutMonitor: ObservableObject {
     let shortcutTransitionPublisher = PassthroughSubject<BuddyPushToTalkShortcut.ShortcutTransition, Never>()
+    /// Fires when the user taps Control+Shift (press both, release, no other
+    /// key in between). Opens the Click It gemstone menu. Modifier-only, so it
+    /// never types a character or replaces selected text in the front app.
+    let clickItMenuShortcutPublisher = PassthroughSubject<Void, Never>()
+    /// True while Control+Shift is held with no other key pressed yet.
+    private var isClickItModifierTapInProgress = false
 
     private var globalEventTap: CFMachPort?
     private var globalEventTapRunLoopSource: CFRunLoopSource?
@@ -97,6 +103,34 @@ final class GlobalPushToTalkShortcutMonitor: ObservableObject {
         }
     }
 
+    /// Detects a clean Control+Shift tap for the Click It menu. Any other key
+    /// pressed while the modifiers are held cancels the tap, so normal
+    /// shortcuts like Control+Shift+Tab never open the menu.
+    private func trackClickItModifierTap(eventType: CGEventType, eventFlags: CGEventFlags) {
+        switch eventType {
+        case .keyDown:
+            isClickItModifierTapInProgress = false
+        case .flagsChanged:
+            let isControlHeld = eventFlags.contains(.maskControl)
+            let isShiftHeld = eventFlags.contains(.maskShift)
+            let isOtherModifierHeld = eventFlags.contains(.maskAlternate)
+                || eventFlags.contains(.maskCommand)
+                || eventFlags.contains(.maskSecondaryFn)
+
+            if isControlHeld && isShiftHeld && !isOtherModifierHeld {
+                isClickItModifierTapInProgress = true
+            } else if isOtherModifierHeld {
+                isClickItModifierTapInProgress = false
+            } else if !isControlHeld && !isShiftHeld {
+                if isClickItModifierTapInProgress {
+                    isClickItModifierTapInProgress = false
+                    clickItMenuShortcutPublisher.send(())
+                }
+            }
+        default:
+            break
+        }
+    }
     private func handleGlobalEventTap(
         eventType: CGEventType,
         event: CGEvent
@@ -108,6 +142,7 @@ final class GlobalPushToTalkShortcutMonitor: ObservableObject {
             return Unmanaged.passUnretained(event)
         }
 
+        trackClickItModifierTap(eventType: eventType, eventFlags: event.flags)
         let eventKeyCode = UInt16(event.getIntegerValueField(.keyboardEventKeycode))
         let shortcutTransition = BuddyPushToTalkShortcut.shortcutTransition(
             for: eventType,

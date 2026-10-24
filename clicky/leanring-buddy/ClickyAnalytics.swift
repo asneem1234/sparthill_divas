@@ -14,8 +14,15 @@ enum ClickyAnalytics {
     // MARK: - Setup
 
     static func configure() {
+        // The PostHog project key is not kept in source control. To turn on
+        // analytics, add a PostHogAPIKey string to Info.plist locally. Without
+        // it, analytics stays off and every tracking call is ignored.
+        guard let postHogProjectAPIKey = AppBundleConfiguration.stringValue(forKey: "PostHogAPIKey") else {
+            print("Clicky: PostHog analytics disabled (no PostHogAPIKey in Info.plist)")
+            return
+        }
         let config = PostHogConfig(
-            apiKey: "phc_xcQPygmhTMzzYh8wNW92CCwoXmnzqyChAixh8zgpqC3C",
+            apiKey: postHogProjectAPIKey,
             host: "https://us.i.posthog.com"
         )
         PostHogSDK.shared.setup(config)
