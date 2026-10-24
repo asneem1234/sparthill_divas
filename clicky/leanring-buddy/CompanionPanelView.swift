@@ -686,7 +686,6 @@ struct CompanionPanelView: View {
         .pointerCursor()
         .help("Open the Click It gemstone menu")
     }
-
     // MARK: - DM Farza Button
 
     private var dmFarzaButton: some View {
