@@ -1,6 +1,9 @@
-name = "clicky-proxy"
+name = "clickit-worker"
 main = "src/index.ts"
 compatibility_date = "2024-01-01"
 
+# For local development, secrets are read from .env file
+# For production, set secrets using: npx wrangler secret put GEMINI_API_KEY
+
 [vars]
-ELEVENLABS_VOICE_ID = "kPzsL2i3teMYv0FxEYQ6"
+# You can add non-sensitive variables here if needed

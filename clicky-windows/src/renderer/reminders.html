@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self'"
+    />
+    <link rel="stylesheet" href="popup.css" />
+    <title>ClickIt Reminders</title>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Reminders</h1>
+        <button id="close" class="icon secondary" type="button" aria-label="Close">×</button>
+      </header>
+
+      <section aria-labelledby="new-heading">
+        <h2 id="new-heading">New reminder</h2>
+        <form id="add-form" class="section-form">
+          <label for="text">Remind me to…</label>
+          <input id="text" type="text" maxlength="200" placeholder="e.g. Submit the form" autocomplete="off" />
+
+          <label for="window-pick">…or go back to an open window</label>
+          <select id="window-pick">
+            <option value="">(none)</option>
+          </select>
+
+          <label for="minutes">In how many minutes</label>
+          <div class="row">
+            <input id="minutes" type="number" min="1" max="10080" value="30" />
+            <button type="submit">Add</button>
+          </div>
+        </form>
+        <p id="add-error" class="error" role="alert"></p>
+      </section>
+
+      <section aria-labelledby="upcoming-heading">
+        <h2 id="upcoming-heading">Upcoming</h2>
+        <ul id="upcoming" class="list"></ul>
+        <p id="upcoming-empty" class="muted">No reminders yet.</p>
+      </section>
+
+      <section aria-labelledby="bg-heading">
+        <h2 id="bg-heading">Background apps</h2>
+        <label for="nudge">Notify me about open apps every (minutes, 0 = off)</label>
+        <div class="row">
+          <input id="nudge" type="number" min="0" max="240" value="0" />
+          <button id="save-nudge" type="button">Save</button>
+        </div>
+        <div class="row">
+          <button id="check-now" class="secondary" type="button">Check now</button>
+          <span id="nudge-notice" class="notice" role="status" aria-live="polite"></span>
+        </div>
+        <ul id="open-windows" class="list"></ul>
+        <p class="muted">Browsers only show the title of their active tab.</p>
+      </section>
+    </main>
+    <script src="reminders.js"></script>
+  </body>
+</html>

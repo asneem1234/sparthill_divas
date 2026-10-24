@@ -7,12 +7,17 @@
   "private": true,
   "scripts": {
     "start": "electron .",
-    "check": "node scripts/check-parser.js"
+    "check": "node scripts/check-parser.js",
+    "test:gemini": "node scripts/test-gemini.js"
   },
   "dependencies": {
     "uiohook-napi": "1.5.5"
   },
   "devDependencies": {
     "electron": "33.4.11"
+  },
+  "allowScripts": {
+    "electron@33.4.11": true,
+    "uiohook-napi@1.5.5": true
   }
 }

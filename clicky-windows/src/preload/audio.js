@@ -2,17 +2,9 @@
 
 const { contextBridge, ipcRenderer } = require('electron');
 
-const INCOMING = new Set([
-  'audio:start',
-  'audio:connect',
-  'audio:stop',
-  'audio:cancel',
-  'audio:play',
-  'audio:stop-playback',
-  'audio:speak-fallback',
-]);
+const INCOMING = new Set(['audio:start', 'audio:stop', 'audio:cancel', 'audio:stop-playback', 'audio:speak']);
 const OUTGOING = new Set([
-  'audio:transcript',
+  'audio:recorded',
   'audio:error',
   'audio:level',
   'audio:playback-started',
