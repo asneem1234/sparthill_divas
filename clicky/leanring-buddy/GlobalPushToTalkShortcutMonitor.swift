@@ -131,7 +131,6 @@ final class GlobalPushToTalkShortcutMonitor: ObservableObject {
             break
         }
     }
-
     private func handleGlobalEventTap(
         eventType: CGEventType,
         event: CGEvent
@@ -144,7 +143,6 @@ final class GlobalPushToTalkShortcutMonitor: ObservableObject {
         }
 
         trackClickItModifierTap(eventType: eventType, eventFlags: event.flags)
-
         let eventKeyCode = UInt16(event.getIntegerValueField(.keyboardEventKeycode))
         let shortcutTransition = BuddyPushToTalkShortcut.shortcutTransition(
             for: eventType,

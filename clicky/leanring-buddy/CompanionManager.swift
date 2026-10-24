@@ -444,7 +444,6 @@ final class CompanionManager: ObservableObject {
         NSApp.activate(ignoringOtherApps: true)
         placeholderAlert.runModal()
     }
-
     // MARK: - Private
 
     /// Triggers the system microphone prompt if the user has never been asked.
