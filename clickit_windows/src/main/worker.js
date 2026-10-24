@@ -27,8 +27,20 @@ function extractErrorMessage(errorText) {
   return errorText;
 }
 
-/** Turns a failed worker request into a message a person can act on. */
+/** Removes anything that looks like an API key, so a key can never end up in a message shown to the user. */
+function scrubSecrets(text) {
+  return String(text)
+    .replace(/\bAQ\.[A-Za-z0-9_-]{16,}/g, '[hidden]')
+    .replace(/\bAIza[0-9A-Za-z_-]{20,}/g, '[hidden]')
+    .replace(/([?&]key=)[^&\s"]+/gi, '$1[hidden]');
+}
+
+/** Turns a failed worker request into a message a person can act on. Never contains key names, file paths or keys. */
 function describeWorkerError(error, workerBaseUrl) {
+  return scrubSecrets(describeWorkerErrorUnscrubbed(error, workerBaseUrl));
+}
+
+function describeWorkerErrorUnscrubbed(error, workerBaseUrl) {
   const errorDetails = String((error && (error.cause || error.message)) || error);
   if (error instanceof TypeError || /fetch failed|ECONNREFUSED|ENOTFOUND/i.test(errorDetails)) {
     return `Couldn't reach the worker at ${workerBaseUrl}. Is it running? Check the Worker field in the panel.`;
@@ -42,13 +54,13 @@ function describeWorkerError(error, workerBaseUrl) {
   if (statusCode === 429) {
     const retryMatch = /retry in ([\d.]+)s/i.exec(detailMessage);
     const waitText = retryMatch ? ` Try again in about ${Math.ceil(Number(retryMatch[1]))} seconds.` : ' Wait a minute and try again.';
-    return `Gemini's request limit was reached (free keys allow only a few requests per minute).${waitText}`;
+    return `Gemini's request limit was reached.${waitText}`;
   }
   if (/API key not valid|API_KEY_INVALID/i.test(detailMessage)) {
-    return 'Gemini rejected the API key. Check GEMINI_API_KEY in clicky/worker/.dev.vars, then restart the worker.';
+    return 'Gemini rejected the request (credentials). Check the worker setup, then restart the worker.';
   }
   if (statusCode === 404) {
-    return `Gemini doesn't offer that model to your key: ${detailMessage.slice(0, 160)}`;
+    return `Gemini doesn't offer that model: ${detailMessage.slice(0, 160)}`;
   }
   if (statusCode === 403) {
     return `Gemini refused the request (permission): ${detailMessage.slice(0, 160)}`;

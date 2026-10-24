@@ -455,12 +455,14 @@ function describeFailure(failure) {
     return `Can't reach the voice server at ${config.workerBaseUrl}. Start it from the worker folder with: npx wrangler dev --port 8787 --ip 127.0.0.1`;
   }
   if (/quota|resource_exhausted|rate|429/i.test(reason)) {
-    return "Gemini's free-tier limit was reached. Wait a minute, then click the icon to reconnect.";
+    return "Gemini's request limit was reached. Wait a minute, then click the icon to reconnect.";
   }
   if (/api key|permission|unauthenticated|403|401/i.test(reason)) {
-    return "Gemini didn't accept the key stored in the worker. Check GEMINI_API_KEY in worker/.dev.vars.";
+    return "Gemini rejected the request (credentials). Check the worker setup, then restart the worker.";
   }
-  return `Gemini ended the connection${failure.code ? ` (code ${failure.code})` : ''}${reason ? `: ${reason.slice(0, 160)}` : '.'}`;
+  // Never show anything that looks like a key, whatever the server's reason text says.
+  const safeReason = reason.replace(/\bAQ\.[A-Za-z0-9_-]{16,}/g, '[hidden]').replace(/\bAIza[0-9A-Za-z_-]{20,}/g, '[hidden]');
+  return `Gemini ended the connection${failure.code ? ` (code ${failure.code})` : ''}${safeReason ? `: ${safeReason.slice(0, 160)}` : '.'}`;
 }
 
 function closeSocketQuietly() {

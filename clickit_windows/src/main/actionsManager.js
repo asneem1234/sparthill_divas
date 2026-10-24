@@ -36,7 +36,7 @@ const TRANSLATE_LANGUAGE_SUGGESTIONS = [
 /**
  * What each action does.
  *  - automaticallyRuns: starts once the window has been cleared (Ask waits for a question)
- *  - usesCopiedText: offers the clipboard text as extra input
+ *  - usesCopiedText: offers the clipboard text as extra input (off for every action: Click It never reads the clipboard)
  *  - allowsFollowUps: shows the follow-up question box
  */
 const ACTION_DEFINITIONS = {
@@ -52,17 +52,17 @@ const ACTION_DEFINITIONS = {
   askExplain: {
     title: 'Ask / Explain',
     automaticallyRuns: false,
-    usesCopiedText: true,
+    usesCopiedText: false,
     allowsFollowUps: true,
     showsLanguagePicker: false,
     workingText: 'Thinking...',
-    inputPlaceholder: 'Ask about the window or the copied text...',
-    idleHint: 'Ask anything about the window you chose. Copy some text first and it will be used as the thing you are asking about.',
+    inputPlaceholder: 'Ask about the window...',
+    idleHint: 'Ask anything about the window you chose.',
   },
   translate: {
     title: 'Translate',
     automaticallyRuns: true,
-    usesCopiedText: true,
+    usesCopiedText: false,
     allowsFollowUps: false,
     showsLanguagePicker: true,
     workingText: 'Translating...',
@@ -71,7 +71,7 @@ const ACTION_DEFINITIONS = {
   privacyGuard: {
     title: 'Privacy Guard',
     automaticallyRuns: true,
-    usesCopiedText: true,
+    usesCopiedText: false,
     allowsFollowUps: true,
     showsLanguagePicker: false,
     workingText: 'Checking for sensitive information...',

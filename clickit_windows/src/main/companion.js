@@ -17,7 +17,8 @@ const { COMPANION_VOICE_RESPONSE_SYSTEM_PROMPT, ONBOARDING_DEMO_SYSTEM_PROMPT } 
 const { parsePointingCoordinates, convertScreenshotPointToGlobalLocation } = require('./pointTag');
 const { CLICK_IT_ACTIONS } = require('./clickItActions');
 
-const AVAILABLE_MODELS = [{ label: 'Flash 2.5', id: 'gemini-2.5-flash' }];
+// gemini-2.5-flash answers "no longer available to new users" on newer API keys, so the app uses 3.5 Flash.
+const AVAILABLE_MODELS = [{ label: 'Flash 3.5', id: 'gemini-3.5-flash' }];
 
 const MAXIMUM_CONVERSATION_HISTORY_EXCHANGES = 10;
 const PERMISSION_POLLING_INTERVAL_MILLISECONDS = 1500;

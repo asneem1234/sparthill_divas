@@ -9,7 +9,7 @@ const DEFAULT_SETTINGS = {
   // Base URL of the Cloudflare Worker proxy (clicky/worker). `wrangler dev`
   // serves on http://localhost:8787 which matches the macOS app's default.
   workerBaseUrl: 'http://localhost:8787',
-  selectedModel: 'gemini-2.5-flash',
+  selectedModel: 'gemini-3.5-flash',
   isClickyCursorEnabled: true,
   hasCompletedOnboarding: false,
   // Language the Click It "Translate" action translates into.

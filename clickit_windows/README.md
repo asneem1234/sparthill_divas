@@ -68,7 +68,7 @@ No window to manage, no tab to switch to. You talk, it helps, it points.
         v
  [ Window picker ] --> [ Capture ] --> [ On-device OCR + secret scan ] --+--> blocked: AI never called
                                                                          |
-                                                                         +--> clean: screenshot + text --> Worker /chat (Gemini 2.5 Flash, streamed)
+                                                                         +--> clean: screenshot + text --> Worker /chat (Gemini 3.5 Flash, streamed)
                                                                                                               |
                                       [ Cursor flies to the spot ] <-- parse [POINT:x,y:label] <-- spoken answer
 ```
@@ -91,8 +91,8 @@ No window to manage, no tab to switch to. You talk, it helps, it points.
 | **Push-to-talk** | Hold Left Ctrl + Left Alt; release to send. Silent or accidental presses are never uploaded |
 | **Window picker** | Live previews of open windows. Blocked windows (password managers, ".env", etc.) can't be chosen |
 | **Snap** | Like the Windows screenshot tool: freeze the screen, drag a rectangle, get an explanation and follow-ups |
-| **Ask / Explain** | Type a question about the window or your copied text |
-| **Translate** | Translate copied text, or everything in the window, into any language |
+| **Ask / Explain** | Type a question about the window you chose |
+| **Translate** | Translate the text in the window you chose into any language |
 | **Privacy Guard** | Scans a window for sensitive data before you share it. Reports findings from your PC without sending them anywhere |
 | **Voice chat** | Floating icon, voice to voice, interruptible, screen-aware on request, mute / drag / voice menu |
 
@@ -104,7 +104,7 @@ No window to manage, no tab to switch to. You talk, it helps, it points.
 |---|---|---|
 | **App shell** | **Electron 33** (Node.js), tray-only app | Fast path to a polished native-feeling Windows app: tray, transparent overlays, global shortcuts |
 | **Global hotkeys** | **uiohook-napi 1.5.5** (native keyboard hook) with a fallback shortcut | Push-to-talk needs key *down* and key *up*, which Electron's own shortcuts can't give |
-| **Vision + chat model** | **Gemini 2.5 Flash** (streamed over SSE) | Fast, multimodal, free-tier friendly |
+| **Vision + chat model** | **Gemini 3.5 Flash** (streamed over SSE) | Fast, multimodal, free-tier friendly |
 | **Voice to voice** | **Gemini Live API** over WebSocket (`gemini-3.1-flash-live-preview`, with automatic fallback to three other live models) | One streaming connection per conversation instead of three requests per turn, which fits the free tier |
 | **Tool use** | Gemini **function calling** (`look_at_screen`) | The model decides when the screen is needed; nothing is captured otherwise |
 | **Backend** | **Cloudflare Worker** (TypeScript, Wrangler) with `/chat`, `/transcribe` and a `/live` WebSocket proxy | Keeps the API key off the device; `/live` only lets Gemini live models through |
@@ -129,7 +129,7 @@ No window to manage, no tab to switch to. You talk, it helps, it points.
 
 - **Demo-grade build.** Not packaged, signed, or installable yet; run it with `npm start`.
 - **Local worker has no user authentication.** Fine on `localhost` for a demo. A public deployment needs sign-in and rate limiting first.
-- **Free-tier limits** (about 5 requests a minute on 2.5 Flash) and **preview Live models** that Google can change or retire.
+- **Free-tier limits** (a few requests a minute, and a daily cap) and **preview Live models** that Google can change or retire.
 - **Free-tier terms:** Google may use what you send. Click It's privacy check reduces what leaves the PC; it does not change those terms.
 - **The privacy check is a safety net, not a guarantee.** Secrets inside images, or passwords shown as dots, can slip past OCR.
 - **Browser tabs:** Windows can't jump to a background tab, so you pick the window showing the tab you want.
@@ -217,7 +217,7 @@ Click It is an AI that lives in your cursor (a Windows tray app with a small pin
 AI is the core of what Click It does:
 
 - **Speech to text:** Gemini transcribes what you say in push-to-talk.
-- **Seeing and explaining:** Gemini 2.5 Flash is multimodal. It reads the screenshot and your question together, explains, translates, and checks content. It also outputs a pointer tag (`[POINT:x,y:label]`) so the cursor can fly to the right spot.
+- **Seeing and explaining:** Gemini 3.5 Flash is multimodal. It reads the screenshot and your question together, explains, translates, and checks content. It also outputs a pointer tag (`[POINT:x,y:label]`) so the cursor can fly to the right spot.
 - **Voice to voice:** The Gemini Live API streams your voice in and its voice out, with natural turn-taking and interruption.
 - **Deciding when to look:** In voice chat, the model uses function calling (`look_at_screen`) to decide when it needs the screen. If you don't ask about the screen, nothing is captured.
 
@@ -227,7 +227,7 @@ The privacy gate is deliberately **not** left to the AI. It runs locally with OC
 
 - **App:** Electron 33 (Node.js, JavaScript), tray-only app with transparent click-through overlays on every monitor.
 - **Global hotkeys:** uiohook-napi 1.5.5 (native keyboard hook) for push-to-talk key down and up.
-- **AI models:** Gemini 2.5 Flash (chat and vision, streamed over SSE) and the Gemini Live API over WebSocket (`gemini-3.1-flash-live-preview` with automatic fallback to three other live models), using a free Gemini API key.
+- **AI models:** Gemini 3.5 Flash (chat and vision, streamed over SSE) and the Gemini Live API over WebSocket (`gemini-3.1-flash-live-preview` with automatic fallback to three other live models), using a free Gemini API key.
 - **Backend:** a Cloudflare Worker (TypeScript, Wrangler) with `/chat`, `/transcribe` and a `/live` WebSocket proxy. It keeps the API key off the device and only lets Gemini live models through.
 - **Audio:** Web Audio API and AudioWorklet (16 kHz mic capture, 24 kHz streamed playback), echo cancellation, the Windows system voice for push-to-talk replies.
 - **Screen and windows:** Electron `desktopCapturer`, Win32 calls through PowerShell for switching windows, and `setContentProtection` so Click It's own UI never appears in screenshots.
@@ -251,7 +251,7 @@ These are expected benefits. I haven't measured them yet: the first step would b
 **Limitations**
 - It's a **demo-grade build**: run from source, not packaged, signed or installable yet.
 - The local worker has **no user sign-in or rate limiting**. That's fine on `localhost` but must be added before any public deployment.
-- **Free-tier limits** (about 5 requests a minute on 2.5 Flash), and the live voice models are **previews** that Google can change or retire.
+- **Free-tier limits** (a few requests a minute, and a daily cap), and the live voice models are **previews** that Google can change or retire.
 - On the free tier, Google may use what is sent. The privacy check reduces what leaves the PC, but it doesn't change those terms.
 - The privacy check is a **safety net, not a guarantee**: a secret inside an image, or a password shown as dots, can slip past OCR, and harmless content is sometimes flagged.
 - Windows can't jump to a background browser tab, so you pick the window that shows the tab you want.
@@ -314,14 +314,14 @@ Tap **Ctrl + Shift** and Click It asks **which window it may look at**, with liv
 
 When you pick one, Click It **switches straight to that window** and shows the gems **on top of it**, with a typed "hi, i'm click it. ai living in your cursor." greeting. Browser windows show whichever tab is open, so switch to the tab you want before you pick it (Windows can't jump to a background tab). Minimized windows aren't listed.
 
-Then pick a gemstone and a result window opens with the answer. Copy text first (Ctrl+C) and Ask, Translate and Privacy Guard will use it; click the ✕ on the "Using copied text" chip to ignore it.
+Then pick a gemstone and a result window opens with the answer. Click It never reads your clipboard.
 
 | Gem | What it does |
 |---|---|
 | Snap | Works like the Windows screenshot tool: the screen freezes, you **drag a rectangle** around what you want and press **Snap** (or Enter). It explains that area and takes follow-up questions. Esc, Cancel or right-click backs out, and nothing is captured or sent |
-| Ask / Explain | Type a question about the window or the copied text |
-| Translate | Translates the copied text, or all the text in the window, into the language you pick (remembered for next time) |
-| Privacy Guard | Checks the window (and copied text) for passwords, keys, cards and personal details before you share it. When it finds something it reports it from your PC and sends nothing to the AI |
+| Ask / Explain | Type a question about the window |
+| Translate | Translates the text in the window into the language you pick (remembered for next time) |
+| Privacy Guard | Checks the window for passwords, keys, cards and personal details before you share it. When it finds something it reports it from your PC and sends nothing to the AI |
 | Voice chat | A small pink icon you just talk to, hands-free (below). It looks at your screen only when you ask about it |
 
 ### Voice chat (voice to voice)
@@ -345,7 +345,6 @@ Before anything goes to the AI, Click It reads the window (or, for Snap, the are
 
 - **Blocked, no way around it:** private keys, API keys and tokens, `password=...` values, payment card numbers, SSN/Aadhaar/PAN numbers, card security codes, recovery phrases, and windows from password managers (1Password, Bitwarden, KeePass and others) or with titles like "Passwords" or ".env". The AI is never called, and the message shows only a masked hint such as `hu...or`.
 - **Asks first:** a sign-in form or a one-time code on screen. You see what was noticed and can choose **Send anyway** or pick another window.
-- **Copied text** is checked the same way.
 - **Voice questions** are checked too. A screen that looks private is not attached; the assistant is told it can't see it, and the panel tells you.
 - If Windows' text recognition can't run, voice questions send no screen, and Click It asks before sending anything.
 
@@ -403,6 +402,6 @@ src/preload/     one small contextBridge API per window
 scripts/check-*.js        npm run check (parser, redaction, secret detection)
 ```
 
-Gemini keys on the free tier allow only a few requests per minute (about 5 for 2.5 Flash). One spoken question uses two requests (transcribe and answer). If you hit the limit, the app says so and how long to wait.
+Gemini keys on the free tier allow only a few requests per minute and a limited number per day. One spoken question uses two requests (transcribe and answer). If you hit the limit, the app says so and how long to wait.
 
 Settings are stored in `%APPDATA%\ClickIt\settings.json`. Set `CLICKIT_DEBUG_LOGS=1` to print renderer console output in the terminal.

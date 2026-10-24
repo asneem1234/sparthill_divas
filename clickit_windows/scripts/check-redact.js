@@ -34,7 +34,15 @@ const rateLimit = describeWorkerError(
   'http://localhost:8787'
 );
 assert(/limit was reached/.test(rateLimit) && /51 seconds/.test(rateLimit), rateLimit);
-assert(/rejected the API key/.test(describeWorkerError(new Error('API Error (400): {"error":{"message":"API key not valid. Please pass a valid API key."}}'), 'x')));
+const rejectedKeyMessage = describeWorkerError(new Error('API Error (400): {"error":{"message":"API key not valid. Please pass a valid API key."}}'), 'x');
+assert(/rejected the request/.test(rejectedKeyMessage), rejectedKeyMessage);
+// Messages shown to the user never name the key, the secrets file, or contain a key.
+assert(!/GEMINI_API_KEY|\.dev\.vars/.test(rejectedKeyMessage), rejectedKeyMessage);
+const leakyMessage = describeWorkerError(
+  new Error('API Error (418): {"error":{"message":"bad call to https://x/v1?key=AQ.Ab8RN6FakeFakeFakeFakeFakeFake1234 and AIzaSyFakeFakeFakeFakeFakeFakeFake12345"}}'),
+  'x'
+);
+assert(!/AQ\.Ab8|AIzaSy|key=AQ/.test(leakyMessage), leakyMessage);
 assert(/Couldn't reach the worker/.test(describeWorkerError(new TypeError('fetch failed'), 'http://localhost:8787')));
 assert(/rate|limit/i.test(describeWorkerError(new Error('Transcription failed (429): {"error":{"message":"quota"}}'), 'x')));
 
